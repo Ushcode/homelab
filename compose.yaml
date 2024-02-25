@@ -1,0 +1,77 @@
+version: "3.3"
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    environment:
+      PUID: 1000
+      PGID: 1000
+    ports:
+      - 3000:3000
+    volumes:
+      - ./config:/app/config
+      - ./media:/app/public/images
+      - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
+    restart: unless-stopped
+
+  plex:
+    image: plexinc/pms-docker
+    container_name: plex
+    restart: unless-stopped
+    volumes:
+      - /path/to/plex/config:/config
+      - /path/to/plex/media:/media
+    environment:
+      - PLEX_CLAIM=claim-xxxxxx
+    ports:
+      - "32400:32400"
+      - "3005:3005"
+      - "8324:8324"
+      - "32469:32469"
+      - "1900:1900/udp"
+      - "32410:32410/udp"
+      - "32412:32412/udp"
+      - "32413:32413/udp"
+      - "32414:32414/udp"
+
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    restart: unless-stopped
+    volumes:
+      - /path/to/radarr/config:/config
+      - /path/to/radarr/downloads:/downloads
+      - /path/to/radarr/movies:/movies
+    ports:
+      - "7878:7878"
+
+  overseer:
+    image: overseer:latest
+    container_name: overseer
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - OVERSEER_DATABASE_URL=sqlite:///overseer.db
+
+  qbittorrent:
+    image: linuxserver/qbittorrent
+    container_name: qbittorrent
+    restart: unless-stopped
+    volumes:
+      - /path/to/qbittorrent/config:/config
+      - /path/to/qbittorrent/downloads:/downloads
+    ports:
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /path/to/portainer/data:/data
+    ports:
+      - "9000:9000"
