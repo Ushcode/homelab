@@ -8,7 +8,7 @@ services:
       - PUID:1000
       - PGID:1000
     ports:
-      - 3000:3000
+      - 80:3000
     volumes:
       - ./dashboard/config:/app/config
       - ./dashboard/media:/app/public/images
@@ -320,7 +320,7 @@ services:
       - TZ=Etc/UTC
       - WEBPASSWORD=postword
     ports:
-      - 80:8081
+      - 8081:8081
     volumes:
       - './etc-pihole:/etc/pihole'
       - './etc-dnsmasq.d:/etc/dnsmasq.d'
