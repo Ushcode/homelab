@@ -10,3 +10,11 @@
 - search:
     provider: duckduckgo
     target: _blank
+
+- weatherapi:
+    label: Cambridge # optional
+    latitude: 52.1951
+    longitude: 0.1313
+    units: metric # or imperial
+    apiKey: 2e89f907fc824d4aa37220552242502
+    cache: 5 # Time in minutes to cache API responses, to stay within limits
