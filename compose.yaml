@@ -1,4 +1,5 @@
-version: "3.3"
+version: "3.8"
+
 services:
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
@@ -9,18 +10,18 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./config:/app/config
-      - ./media:/app/public/images
+      - ./dashboard/config:/app/config 
+      - ./dashboard/media:/app/public/images
       - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
     restart: unless-stopped
 
   plex:
-    image: plexinc/pms-docker
+    image: linuxserver/plex
     container_name: plex
     restart: unless-stopped
     volumes:
-      - /path/to/plex/config:/config
-      - /path/to/plex/media:/media
+      - /plex/config:/config
+      - /plex/media:/media
     environment:
       - PLEX_CLAIM=claim-xxxxxx
     ports:
@@ -34,37 +35,90 @@ services:
       - "32413:32413/udp"
       - "32414:32414/udp"
 
+  overseer:
+    image: linuxserver/overseerr:latest
+    container_name: overseer
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+       - OVERSEER_DATABASE_URL=postgres:///overseerr.db # must configure
+  
+  sonarr: 
+    image: linuxserver/sonarr
+    container_name: sonarr
+    restart: unless-stopped
+    volumes:
+      - /radarr/config:/config
+      - /radarr/downloads:/downloads
+      - /radarr/movies:/movies
+    ports:
+      - "7879:7879" 
+  
+  
   radarr:
     image: linuxserver/radarr
     container_name: radarr
     restart: unless-stopped
     volumes:
-      - /path/to/radarr/config:/config
-      - /path/to/radarr/downloads:/downloads
-      - /path/to/radarr/movies:/movies
+      - /sonarr/config:/config
+      - /sonarr/downloads:/downloads
+      - /sonarr/movies:/movies
     ports:
       - "7878:7878"
 
-  overseer:
-    image: overseer:latest
-    container_name: overseer
+  prowlarr:
+    image: linuxserver/prowlarr
+    container_name: prowlarr
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
-      - OVERSEER_DATABASE_URL=sqlite:///overseer.db
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /prowlarr:/config
+    ports:
+      - 9696:9696
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+    - LOG_LEVEL=${LOG_LEVEL:-info}
+    - LOG_HTML=${LOG_HTML:-false}
+    - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+    - TZ=Europe/London
+    ports:
+    - 8191:8191
+    restart: unless-stopped 
+
+  unpackerr:
+    image: golift/unpackerr
+    container_name: unpacker
+    ports:
+      - 8082:8082
+    restart: unless-stopped
+
+  cloudflare:
+    image: cloudflare/cloudflared
+    container_name: cloudflare 
+    ports:
+      - 8083:8083
+    restart: unless-stopped
 
   qbittorrent:
     image: linuxserver/qbittorrent
     container_name: qbittorrent
     restart: unless-stopped
     volumes:
-      - /path/to/qbittorrent/config:/config
-      - /path/to/qbittorrent/downloads:/downloads
+      - /qbittorrent/config:/config
+      - /qbittorrent/downloads:/downloads
     ports:
-      - "8080:8080"
+      - "8081:8081"
       - "6881:6881"
       - "6881:6881/udp"
+    depends_on:
+      - vpn
 
   portainer:
     image: portainer/portainer-ce
@@ -72,6 +126,55 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /path/to/portainer/data:/data
+      - /portainer/data:/data
     ports:
       - "9000:9000"
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: unless-stopped
+    ports: 
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postword
+    
+  pgAdmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgAdmin
+    restart: unless-stopped
+    ports: 
+      - "5435:5435"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=oisinpeppard@hotmail.com
+      - PGADMIN_DEFAULT_PASSWORD=postword
+
+  nginx:
+    image: nginx
+    container_name: nginx
+
+  vpn:
+    image: ghcr.io/bubuntux/nordvpn
+    container_name: nordvpn
+    cap_add:
+      - NET_ADMIN               # Required
+      - NET_RAW                 # Required
+    environment:                # Review https://github.com/bubuntux/nordvpn#environment-variables
+      - TOKEN=e9f2ab9f0da02a21021442a333a727ca1bb5c8ca0a8f08dddf5d3b5632df0b75       # Required
+      - CONNECT=United_Kingdom
+      - TECHNOLOGY=NordLynx
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1  # Recomended if using ipv4 only
+  
+  # torrent:
+  #   image: ghcr.io/linuxserver/qbittorrent
+  #   network_mode: container:vpn
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.services.torrent.loadbalancer.server.port=8080
+  #     - traefik.http.routers.torrent.rule=Host(`custom-host`)
+    
+      
+# Make sure that custom-host resolves to the ip address of the server 
+# for example /etc/hosts contains 127.0.0.1  custom-host
+# the torrent service would be available at http://custom-host
