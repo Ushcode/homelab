@@ -1,0 +1,74 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/latest/configs/services
+
+- Library:
+      - Plex:
+            icon: plex.png
+            href: http://192.168.0.66:32400/web
+            description: Media server
+      - Navidrome:
+            icon: navidrome.png
+            href: http://192.168.0.66:4533
+            description: Music server
+      - Overseerr:
+            icon: overseerr.png
+            href: http://192.168.0.66:5055
+            description: Request management and media discovery
+
+- Request Management:
+      - Lidarr:
+            icon: lidarr.png
+            href: http://192.168.0.66:8686
+            description: Music request management
+      - Readarr:
+            icon: readarr.png
+            href: http://192.168.0.66:8787
+            description: Books request management
+      - Sonarr:
+            icon: sonarr.png
+            href: http://192.168.0.66:8989
+            description: TV management
+      - Radarr:
+            icon: radarr.png
+            href: http://192.168.0.66:7878
+            description: Movies Management
+
+- Network Tools:
+      - Nginx:
+            icon: nginx.png
+            href: http://192.168.0.66:80
+            description: Reverse proxy
+      - Adguardhome:
+            icon: adguard-home.png
+            href: http://192.168.0.66:3001
+            description: Ad blocker
+      - Cloudflare:
+            icon: cloudflare.png
+            href: http://192.168.0.66:8082
+      - Portainer:
+            icon: portainer.png
+            href: http://192.168.0.66:9000
+
+- Download:
+      - qBitTorrent:
+            icon: qbittorrent.png
+            href: http://192.168.0.66:1916
+            description: Torrent client
+      - SABnzbd:
+            icon: sabnzbd.png
+            href: http://192.168.0.66:8088
+            description: Usenet client
+      - Prowlarr:
+            icon: prowlarr.png
+            href: http://192.168.0.66:9696
+            description: Index handler
+
+- Utility:
+      - PGAdmin:
+            icon: pgadmin.png
+            href: http://192.168.0.66:8888
+      - code-server:
+            icon: code-server
+            href: http://192.168.0.66:8443
+            

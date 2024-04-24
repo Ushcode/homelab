@@ -8,33 +8,37 @@ services:
       - PUID:1000
       - PGID:1000
     ports:
-      - 80:3000
+      - 3000:3000
     volumes:
-      - ./dashboard/config:/app/config
-      - ./dashboard/media:/app/public/images
+      - ./homepage/config:/app/config
+      - ./homepage/media:/app/public/images
       - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
-    restart: on-failure[3]
+    restart: unless-stopped
 
   plex:
     image: linuxserver/plex
     container_name: plex
-    restart: on-failure[3]
+    restart: unless-stopped
     network_mode: host
     volumes:
-      - /home/iqbal/plex/config:/config
-      - /home/tv:/tv
-      - /home/movies:/movies
+      - ./plex/config:/config
+      - /serverdata/data/media/tv:/tvbig
+      - /serverdata/data/media/movies:/moviesbig
+      - /home/oisin/data/media/tv:/tv
+      - /home/oisin/data/media/movies:/movies
     environment:
       - PUID=1000
       - PGID=1000
+      - PLEX_UID=1000
+      - PLEX_GUID=1000
       - TZ=Etc/UTC
       - VERSION=docker
-      - PLEX_CLAIM= #optional
+      - PLEX_CLAIM=claim-i7Mwm5AsKJLpzbmktxR7
 
   overseer:
     image: linuxserver/overseerr:latest
     container_name: overseer
-    restart: on-failure[3]
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
@@ -48,73 +52,106 @@ services:
   sonarr:
     image: linuxserver/sonarr
     container_name: sonarr
-    restart: on-failure[3]
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=022
       - TZ=Etc/UTC
     volumes:
-      - /sonarr/config:/config
-      - /home/iqbal/plex/media/tv:/tv #optional
-      # - /path/to/downloadclient-downloads:/downloads #optional
+      - ./sonarr/config:/config
+      - /home/oisin/data:/data
     ports:
       - "8989:8989"
 
   radarr:
     image: linuxserver/radarr
     container_name: radarr
-    restart: on-failure[3]
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
+      - UMASK=022
       - TZ=Etc/UTC
     volumes:
-      - /radarr/config:/config
-      - /home/iqbal/plex/media/movies:/movies #optional
-      # - /path/to/downloadclient-downloads:/downloads #optional
+      - ./radarr/config:/config
+      - /home/oisin/data:/data
     ports:
       - 7878:7878
 
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - TZ=Etc/UTC
+    volumes:
+      - ./lidarr/config:/config
+      - /home/oisin/data:/data
+    ports:
+      - 8686:8686
+    restart: unless-stopped
+
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - TZ=Etc/UTC
+    volumes:
+      - ./readarr/data:/config
+      - /home/oisin/data:/data
+    ports:
+      - 8787:8787
+    restart: unless-stopped
+
   prowlarr:
-    image: linuxserver/prowlarr
+    image: linuxserver/prowlarr:latest
     container_name: prowlarr
-    restart: on-failure[3]
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - /prowlarr:/config
-    ports:
-      - 9696:9696
+      - ./prowlarr/config:/config
+    # ports:
+    #   - 9696:9696
+    depends_on:
+      - nordlynx
+    network_mode: service:nordlynx
 
   flaresolverr:
     # DockerHub mirror flaresolverr/flaresolverr:latest
     image: ghcr.io/flaresolverr/flaresolverr:latest
+    volumes:
+      - ./flaresolverr/config:/app/config
     container_name: flaresolverr
+    
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_HTML=${LOG_HTML:-false}
       - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
       - TZ=Etc/UTC
-    ports:
-      - "${PORT:-8191}:8191"
-    restart: on-failure[3]
+    # ports:
+    #   - "${PORT:-8191}:8191"
+    depends_on:
+      - nordlynx
+    network_mode: service:nordlynx
+    restart: unless-stopped
 
   unpackerr:
     image: golift/unpackerr
     container_name: unpackerr
     volumes:
-      # You need at least this one volume mapped so Unpackerr can find your files to extract.
-      # Make sure this matches your Starr apps; the folder mount (/downloads or /data) should be identical.
-      - /mnt/HostDownloads:/downloads
-    # Get the user:group correct so unpackerr can read and write to your files.
-    user: 1000:1000
-    #user: 1000:1000
-    # What you see below are defaults for this compose. You only need to modify things specific to your environment.
-    # Remove apps and feature configs you do not use or need. 
-    # ie. Remove all lines that begin with UN_CMDHOOK, UN_WEBHOOK, UN_FOLDER, UN_WEBSERVER, and other apps you do not use.
+    - /home/oisin/data:/data
     environment:
+      - PUID=1000
+      - PGID=1000
       - TZ=Etc/UTC
       # General config
       - UN_DEBUG=false
@@ -129,86 +166,53 @@ services:
       - UN_FILE_MODE=0644
       - UN_DIR_MODE=0755
       # Sonarr Config
-      - UN_SONARR_0_URL=http://sonarr:8989
-      - UN_SONARR_0_API_KEY=
+      - UN_SONARR_0_URL=http://192.168.0.66:8989
+      - UN_SONARR_0_API_KEY=/run/secrets/sonarr_api_key
       - UN_SONARR_0_PATHS_0=/downloads
       - UN_SONARR_0_PROTOCOLS=torrent
       - UN_SONARR_0_TIMEOUT=10s
       - UN_SONARR_0_DELETE_ORIG=false
       - UN_SONARR_0_DELETE_DELAY=5m
       # Radarr Config
-      - UN_RADARR_0_URL=http://radarr:7878
-      - UN_RADARR_0_API_KEY=
+      - UN_RADARR_0_URL=http://192.168.0.66:7878
+      - UN_RADARR_0_API_KEY=/run/secrets/radarr_api_key
       - UN_RADARR_0_PATHS_0=/downloads
       - UN_RADARR_0_PROTOCOLS=torrent
       - UN_RADARR_0_TIMEOUT=10s
       - UN_RADARR_0_DELETE_ORIG=false
       - UN_RADARR_0_DELETE_DELAY=5m
       # Lidarr Config
-      - UN_LIDARR_0_URL=http://lidarr:8686
-      - UN_LIDARR_0_API_KEY=
+      - UN_LIDARR_0_URL=http://192.168.0.66:8686
+      - UN_LIDARR_0_API_KEY=/run/secrets/lidarr_api_key
       - UN_LIDARR_0_PATHS_0=/downloads
       - UN_LIDARR_0_PROTOCOLS=torrent
       - UN_LIDARR_0_TIMEOUT=10s
       - UN_LIDARR_0_DELETE_ORIG=false
       - UN_LIDARR_0_DELETE_DELAY=5m
       # Readarr Config
-      - UN_READARR_0_URL=http://readarr:8787
-      - UN_READARR_0_API_KEY=
+      - UN_READARR_0_URL=http://192.168.0.66:8787
+      - UN_READARR_0_API_KEY=/run/secrets/readarr_api_key
       - UN_READARR_0_PATHS_0=/downloads
       - UN_READARR_0_PROTOCOLS=torrent
       - UN_READARR_0_TIMEOUT=10s
       - UN_READARR_0_DELETE_ORIG=false
       - UN_READARR_0_DELETE_DELAY=5m
-      # Folder Config
-      - UN_FOLDER_0_PATH=
-      - UN_FOLDER_0_EXTRACT_PATH=
-      - UN_FOLDER_0_DELETE_AFTER=10m
-      - UN_FOLDER_0_DELETE_ORIGINAL=false
-      - UN_FOLDER_0_DELETE_FILES=false
-      - UN_FOLDER_0_MOVE_BACK=false
-      # Webhook Config
-      - UN_WEBHOOK_0_URL=
-      - UN_WEBHOOK_0_NAME=
-      - UN_WEBHOOK_0_NICKNAME=Unpackerr
-      - UN_WEBHOOK_0_CHANNEL=
-      - UN_WEBHOOK_0_TIMEOUT=10s
-      - UN_WEBHOOK_0_SILENT=false
-      - UN_WEBHOOK_0_IGNORE_SSL=false
-      - UN_WEBHOOK_0_EXCLUDE_0=
-      - UN_WEBHOOK_0_EVENTS_0=0
-      - UN_WEBHOOK_0_TEMPLATE_PATH=
-      - UN_WEBHOOK_0_CONTENT_TYPE=application/json
-      # Command Hook Config
-      - UN_CMDHOOK_0_COMMAND=
-      - UN_CMDHOOK_0_NAME=
-      - UN_CMDHOOK_0_TIMEOUT=10s
-      - UN_CMDHOOK_0_SILENT=false
-      - UN_CMDHOOK_0_SHELL=false
-      - UN_CMDHOOK_0_EXCLUDE_0=
-      - UN_CMDHOOK_0_EVENTS_0=0
-      # Web Server Config
-      - UN_WEBSERVER_METRICS=false
-      - UN_WEBSERVER_LISTEN_ADDR=0.0.0.0:5656
-      - UN_WEBSERVER_LOG_FILE=
-      - UN_WEBSERVER_LOG_FILES=10
-      - UN_WEBSERVER_LOG_FILE_MB=10
-      - UN_WEBSERVER_SSL_CERT_FILE=
-      - UN_WEBSERVER_SSL_KEY_FILE=
-      - UN_WEBSERVER_URLBASE=/
-      - UN_WEBSERVER_UPSTREAMS=
-
+    secrets:
+      - sonarr_api_key
+      - radarr_api_key
+      - lidarr_api_key
+      - readarr_api_key
     security_opt:
       - no-new-privileges:true
-    restart: on-failure[3]
+    restart: unless-stopped
 
-  cloudflared: 
-    image: cloudflare/cloudflared 
-    container_name: cloudflared-tunnel
-    restart: on-failure[3] 
-    command: tunnel run 
-    environment: 
-      - TUNNEL_TOKEN=abcdefghijklmnopqrstuvwxyz0123456789
+  # cloudflared:
+  #   image: cloudflare/cloudflared
+  #   container_name: cloudflared-tunnel
+  #   restart: unless-stopped
+  #   command: tunnel run
+  #   environment:
+  #     - TUNNEL_TOKEN=abcdefghijklmnopqrstuvwxyz0123456789
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -220,88 +224,103 @@ services:
       - WEBUI_PORT=1916
       - TORRENTING_PORT=6881
     volumes:
-      - /path/to/appdata/config:/config
-      - /path/to/downloads:/downloads
-    ports:
-      - 1916:1916
-      - 6881:6881
-      - 6881:6881/udp
-    restart: on-failure[3]
+      - ./qbittorrent/config:/config
+      - /serverdata/data/torrents:/data/torrents
+    restart: unless-stopped
     depends_on:
-      - Vpn
+      - nordlynx
+    network_mode: service:nordlynx
+
+    # SABnzbd
+  SABnzbd:
+      image: lscr.io/linuxserver/sabnzbd:latest
+      volumes:
+          - /path/to/config/sabnzbd:/config
+          - /host/data/usenet:/data/usenet
+      environment:
+          - PUID=1000
+          - PGID=1000
+          - UMASK=002
+      ports:
+      - 8088:8080
+      restart: unless-stopped
 
   portainer:
     image: portainer/portainer-ce
     container_name: portainer
-    restart: on-failure[3]
+    restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /portainer/data:/data
+      - ./portainer/data:/data
     ports:
       - "9000:9000"
 
   postgres:
     image: postgres:latest
     container_name: postgres
-    restart: on-failure[3]
+    restart: unless-stopped
     ports:
       - "5432:5432"
+    secrets:
+      - postgres_password
     environment:
-      - POSTGRES_PASSWORD=postword
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
 
   pgAdmin:
     image: dpage/pgadmin4:latest
     container_name: pgAdmin
-    restart: on-failure[3]
+    restart: unless-stopped
     ports:
-      - "5435:5435"
+      - "8888:80"
+    secrets:
+      - email
+      - postgres_password
     environment:
-      - PGADMIN_DEFAULT_EMAIL=oisinpeppard@hotmail.com
-      - PGADMIN_DEFAULT_PASSWORD=postword
-
+      - PGADMIN_DEFAULT_EMAIL_FILE=/run/secrets/email
+      - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/postgres_password
   nginx:
     container_name: nginx
     image: nginx
     volumes:
-     - ./templates:/etc/nginx/templates
+      - ./templates:/etc/nginx/templates
     ports:
-    - 8080:80
+      - 8080:80
     environment:
-    - NGINX_HOST=foobar.com
-    - NGINX_PORT=80
+      - NGINX_HOST=foobar.com
+      - NGINX_PORT=80
 
-  Vpn:
-    image: ghcr.io/bubuntux/nordvpn
-    container_name: nordvpn
+  nordlynx:
+    container_name: nordlynx
+    image: ghcr.io/bubuntux/nordlynx
     cap_add:
-      - NET_ADMIN # Required
-      - NET_RAW # Required
+      - NET_ADMIN #required
+      - SYS_MODULE 
     environment:
-      # Review https://github.com/bubuntux/nordvpn#environment-variables
-      - TOKEN=e9f2ab9f0da02a21021442a333a727ca1bb5c8ca0a8f08dddf5d3b5632df0b75 # Required
-      - CONNECT=United_Kingdom
-      - TECHNOLOGY=NordLynx
+      - PRIVATE_KEY_FILE=/run/secrets/nord_private_key
+      - QUERY=filters\[servers_groups\]\[identifier\]=legacy_p2p ##
+      - NET_LOCAL=192.168.0.0/16 ##
+    secrets:
+      - nord_private_key 
+    hostname: nordlynx
+    ports:
+      - 6881:6881
+      - 6881:6881/udp
+      - 1916:1916 # ports forwarded for the qBittorrent container
+      - 9696:9696 # port forwarded for the Prowlarr container
+      - 8191:8191 # port forwarded for the flaresolverr container
     sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1 # Recomended if using ipv4 only
-  # torrent:
-  #   image: ghcr.io/linuxserver/qbittorrent
-  #   network_mode: container:vpn
-  #   labels:
-  #     - traefik.enable=true
-  #     - traefik.http.services.torrent.loadbalancer.server.port=8080
-  #     - traefik.http.routers.torrent.rule=Host(`custom-host`)
-
-
-  # Make sure that custom-host resolves to the ip address of the server 
-  # for example /etc/hosts contains 127.0.0.1  custom-host
-  # the torrent service would be available at http://custom-host
-
+        - net.ipv4.conf.all.src_valid_mark=1   # maybe
+        - net.ipv4.conf.all.rp_filter=2        # maybe; set reverse path filter to loose mode
+        - net.ipv6.conf.all.disable_ipv6=1     # disable ipv6; recommended if using ipv4 only
+        
   navidrome:
     image: deluan/navidrome:latest
-    user: 1000:1000 # should be owner of volumes
+    container_name: navidrome
+    user: 1000:1000 
+  
     ports:
       - "4533:4533"
-    restart: on-failure[3]
+    restart: unless-stopped
     environment:
       # Optional: put your config options customization here. Examples:
       ND_SCANSCHEDULE: 1h
@@ -309,22 +328,114 @@ services:
       ND_SESSIONTIMEOUT: 24h
       ND_BASEURL: ""
     volumes:
-      - "./navidrome/config:/data"
-      - "/home/music/:/music:ro"
+      - "./navidrome:/data"
+      - "/home/oisin/music/:/music:ro"
 
-  pihole:
-    container_name: pihole
-    image: pihole/pihole:latest
-    network_mode: "host"
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: calibre-web
     environment:
+      - PUID=1000
+      - PGID=1000
       - TZ=Etc/UTC
-      - WEBPASSWORD=postword
-    ports:
-      - 8081:8081
+      - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
+      - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
     volumes:
-      - './etc-pihole:/etc/pihole'
-      - './etc-dnsmasq.d:/etc/dnsmasq.d'
-    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+      - /path/to/data:/config
+      - /path/to/calibre/library:/books
+    ports:
+      - 8083:8083
+    restart: unless-stopped
+      
+  notifiarr:
+    container_name: notifiarr
+    hostname: notifiarr
+    image: golift/notifiarr
+    restart: unless-stopped
+    ports:
+      - "5454:5454"
+    volumes:
+      - ./notifiarr:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id 
+    environment:
+      - DN_API_KEY=/run/secrets/notifiarr_api_key
+    secrets:
+      - notifiarr_api_key
+
+  adguardhome:
+    image: 'adguard/adguardhome:latest'
+    container_name: 'adguard'
+    hostname: 'adguard'
+    restart: 'unless-stopped'
+    # networks:
+    #   - 'adguard'
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./adguard/data:/opt/adguardhome/work
+      - ./adguard/conf:/opt/adguardhome/conf
+      # The next two lines are only necessary if you're using a custom SSL cert
+      # signed by a private CA trusted by your host machine:
+      #- '/usr/local/share/ca-certificates:/usr/local/share/ca-certificates'
+      #- '/etc/ssl/certs:/etc/ssl/certs'
+    ports:
+      # Plain DNS
+      - '53:53/tcp'
+      - '53:53/udp'
+      # AdGuard Home Admin Panel as well as DNS-over-HTTPS
+      - '80:80/tcp'
+      - '443:443/tcp'
+      - '443:443/udp'
+      - '3001:3000/tcp'
+      # DNS-over-TLS
+      - '853:853/tcp'
+      # DNS-over-QUIC
+      - '784:784/udp'
+      - '853:853/udp'
+      - '8853:8853/udp'
+      # DNSCrypt
+      - '5443:5443/tcp'
+      - '5443:5443/udp'
+
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: code-server
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - PROXY_DOMAIN=code-server.my.domain #optional
+      - DEFAULT_WORKSPACE=/config/workspace #optional
+    volumes:
+      - /path/to/appdata/config:/config
+    ports:
+      - 8443:8443
+    restart: unless-stopped
+
+  meshnet:
+    image: ghcr.io/mattstechinfo/meshnet:latest
+    restart: unless-stopped
     cap_add:
-      - NET_ADMIN # Required if you are using Pi-hole as your DHCP server, else not needed
-    restart: on-failure[3]
+      - NET_ADMIN
+      - NET_RAW
+    env_file: meshnet/.env
+    hostname: iqbal    # Make sure hostname is set! Without it, every restart will add a new peer to your Meshnet.
+
+secrets:
+  sonarr_api_key:
+   file: ./secrets/sonarr_api_key
+  radarr_api_key:
+   file: ./secrets/radarr_api_key
+  lidarr_api_key:
+   file: ./secrets/lidarr_api_key
+  readarr_api_key:
+   file: ./secrets/readarr_api_key
+  notifiarr_api_key:
+    file: ./secrets/notifiarr_key
+  nord_private_key:
+    file: ./secrets/nord_private_key
+  postgres_password:
+    file: ./secrets/postgres_password
+  email:
+    file: ./email_address
+  
