@@ -20,3 +20,6 @@ sonarr/*
 sonarr/*
 homepage/config/widgets.yaml
 homepage/config/settings.yaml
+**/*.log
+**/*.sqlite
+data/keys.json

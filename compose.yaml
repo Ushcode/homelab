@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
@@ -13,19 +11,17 @@ services:
       - ./homepage/config:/app/config
       - ./homepage/media:/app/public/images
       - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
-    restart: unless-stopped
+    restart: on-failure:5
 
   plex:
     image: linuxserver/plex
     container_name: plex
-    restart: unless-stopped
+    restart: on-failure:5
     network_mode: host
     volumes:
       - ./plex/config:/config
-      - /serverdata/data/media/tv:/tvbig
-      - /serverdata/data/media/movies:/moviesbig
-      - /home/oisin/data/media/tv:/tv
-      - /home/oisin/data/media/movies:/movies
+      - /media-server/data/media/tv:/tvbig
+      - /media-server/data/media/movies:/moviesbig
     environment:
       - PUID=1000
       - PGID=1000
@@ -38,7 +34,7 @@ services:
   overseer:
     image: linuxserver/overseerr:latest
     container_name: overseer
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       - PUID=1000
       - PGID=1000
@@ -52,7 +48,7 @@ services:
   sonarr:
     image: linuxserver/sonarr
     container_name: sonarr
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       - PUID=1000
       - PGID=1000
@@ -60,14 +56,14 @@ services:
       - TZ=Etc/UTC
     volumes:
       - ./sonarr/config:/config
-      - /home/oisin/data:/data
+      - /media-server:/data
     ports:
       - "8989:8989"
 
   radarr:
     image: linuxserver/radarr
     container_name: radarr
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       - PUID=1000
       - PGID=1000
@@ -75,7 +71,7 @@ services:
       - TZ=Etc/UTC
     volumes:
       - ./radarr/config:/config
-      - /home/oisin/data:/data
+      - /media-server/data:/data
     ports:
       - 7878:7878
 
@@ -89,10 +85,10 @@ services:
       - TZ=Etc/UTC
     volumes:
       - ./lidarr/config:/config
-      - /home/oisin/data:/data
+      - /media-server/data:/data
     ports:
       - 8686:8686
-    restart: unless-stopped
+    restart: on-failure:5
 
   readarr:
     image: lscr.io/linuxserver/readarr:develop
@@ -104,15 +100,15 @@ services:
       - TZ=Etc/UTC
     volumes:
       - ./readarr/data:/config
-      - /home/oisin/data:/data
+      - /media-server/data:/data
     ports:
       - 8787:8787
-    restart: unless-stopped
+    restart: on-failure:5
 
   prowlarr:
     image: linuxserver/prowlarr:latest
     container_name: prowlarr
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       - PUID=1000
       - PGID=1000
@@ -142,13 +138,13 @@ services:
     depends_on:
       - nordlynx
     network_mode: service:nordlynx
-    restart: unless-stopped
+    restart: on-failure:5
 
   unpackerr:
     image: golift/unpackerr
     container_name: unpackerr
     volumes:
-    - /home/oisin/data:/data
+    - /media-server/data:/data
     environment:
       - PUID=1000
       - PGID=1000
@@ -197,19 +193,19 @@ services:
       - UN_READARR_0_TIMEOUT=10s
       - UN_READARR_0_DELETE_ORIG=false
       - UN_READARR_0_DELETE_DELAY=5m
-    secrets:
-      - sonarr_api_key
-      - radarr_api_key
-      - lidarr_api_key
-      - readarr_api_key
+    # secrets:
+    #   - sonarr_api_key
+    #   - radarr_api_key
+    #   - lidarr_api_key
+    #   - readarr_api_key
     security_opt:
       - no-new-privileges:true
-    restart: unless-stopped
+    restart: on-failure:5
 
   # cloudflared:
   #   image: cloudflare/cloudflared
   #   container_name: cloudflared-tunnel
-  #   restart: unless-stopped
+  #   restart: on-failure:5
   #   command: tunnel run
   #   environment:
   #     - TUNNEL_TOKEN=abcdefghijklmnopqrstuvwxyz0123456789
@@ -225,8 +221,10 @@ services:
       - TORRENTING_PORT=6881
     volumes:
       - ./qbittorrent/config:/config
-      - /serverdata/data/torrents:/data/torrents
-    restart: unless-stopped
+      - ./qbittorrent/app/vuetorrent:/opt/vuetorrent/
+      - ./qbittorrent/app/nightwalker:/opt/nightwalker/
+      - /media-server/data/torrents:/data/torrents
+    restart: on-failure:5
     depends_on:
       - nordlynx
     network_mode: service:nordlynx
@@ -243,12 +241,12 @@ services:
           - UMASK=002
       ports:
       - 8088:8080
-      restart: unless-stopped
+      restart: on-failure:5
 
   portainer:
     image: portainer/portainer-ce
     container_name: portainer
-    restart: unless-stopped
+    restart: on-failure:5
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./portainer/data:/data
@@ -258,7 +256,7 @@ services:
   postgres:
     image: postgres:latest
     container_name: postgres
-    restart: unless-stopped
+    restart: on-failure:5
     ports:
       - "5432:5432"
     secrets:
@@ -269,26 +267,34 @@ services:
   pgAdmin:
     image: dpage/pgadmin4:latest
     container_name: pgAdmin
-    restart: unless-stopped
+    restart: on-failure:5
     ports:
       - "8888:80"
     secrets:
       - email
       - postgres_password
     environment:
-      - PGADMIN_DEFAULT_EMAIL_FILE=/run/secrets/email
+      - PGADMIN_DEFAULT_EMAIL=oisinpeppard@hotmail.com
       - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/postgres_password
+  
   nginx:
     container_name: nginx
-    image: nginx
-    volumes:
-      - ./templates:/etc/nginx/templates
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
     ports:
-      - 8080:80
-    environment:
-      - NGINX_HOST=foobar.com
-      - NGINX_PORT=80
+      # These ports are in format <host-port>:<container-port>
+      - '80:80' # Public HTTP Port
+      - '443:443' # Public HTTPS Port
+      - '81:81' # Admin Web Port
+      # - '21:21' # FTP
 
+    environment:
+
+      DISABLE_IPV6: 'true'
+
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
   nordlynx:
     container_name: nordlynx
     image: ghcr.io/bubuntux/nordlynx
@@ -320,7 +326,7 @@ services:
   
     ports:
       - "4533:4533"
-    restart: unless-stopped
+    restart: on-failure:5
     environment:
       # Optional: put your config options customization here. Examples:
       ND_SCANSCHEDULE: 1h
@@ -329,7 +335,7 @@ services:
       ND_BASEURL: ""
     volumes:
       - "./navidrome:/data"
-      - "/home/oisin/music/:/music:ro"
+      - "/media-server/data/music/:/music:ro"
 
   calibre-web:
     image: lscr.io/linuxserver/calibre-web:latest
@@ -345,13 +351,13 @@ services:
       - /path/to/calibre/library:/books
     ports:
       - 8083:8083
-    restart: unless-stopped
+    restart: on-failure:5
       
   notifiarr:
     container_name: notifiarr
     hostname: notifiarr
     image: golift/notifiarr
-    restart: unless-stopped
+    restart: on-failure:5
     ports:
       - "5454:5454"
     volumes:
@@ -360,42 +366,42 @@ services:
       - /etc/machine-id:/etc/machine-id 
     environment:
       - DN_API_KEY=/run/secrets/notifiarr_api_key
-    secrets:
-      - notifiarr_api_key
+    # secrets:
+    #   - notifiarr_api_key
 
-  adguardhome:
-    image: 'adguard/adguardhome:latest'
-    container_name: 'adguard'
-    hostname: 'adguard'
-    restart: 'unless-stopped'
-    # networks:
-    #   - 'adguard'
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./adguard/data:/opt/adguardhome/work
-      - ./adguard/conf:/opt/adguardhome/conf
-      # The next two lines are only necessary if you're using a custom SSL cert
-      # signed by a private CA trusted by your host machine:
-      #- '/usr/local/share/ca-certificates:/usr/local/share/ca-certificates'
-      #- '/etc/ssl/certs:/etc/ssl/certs'
-    ports:
-      # Plain DNS
-      - '53:53/tcp'
-      - '53:53/udp'
-      # AdGuard Home Admin Panel as well as DNS-over-HTTPS
-      - '80:80/tcp'
-      - '443:443/tcp'
-      - '443:443/udp'
-      - '3001:3000/tcp'
-      # DNS-over-TLS
-      - '853:853/tcp'
-      # DNS-over-QUIC
-      - '784:784/udp'
-      - '853:853/udp'
-      - '8853:8853/udp'
-      # DNSCrypt
-      - '5443:5443/tcp'
-      - '5443:5443/udp'
+  # adguardhome:
+  #   image: 'adguard/adguardhome:latest'
+  #   container_name: 'adguard'
+  #   hostname: 'adguard'
+  #   restart: 'on-failure:5'
+  #   # networks:
+  #   #   - 'adguard'
+  #   volumes:
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - ./adguard/data:/opt/adguardhome/work
+  #     - ./adguard/conf:/opt/adguardhome/conf
+  #     # The next two lines are only necessary if you're using a custom SSL cert
+  #     # signed by a private CA trusted by your host machine:
+  #     #- '/usr/local/share/ca-certificates:/usr/local/share/ca-certificates'
+  #     #- '/etc/ssl/certs:/etc/ssl/certs'
+  #   ports:
+  #     # Plain DNS
+  #     - '53:53/tcp'
+  #     - '53:53/udp'
+  #     # AdGuard Home Admin Panel as well as DNS-over-HTTPS
+  #     - '80:80/tcp'
+  #     - '443:443/tcp'
+  #     - '443:443/udp'
+  #     - '3001:3000/tcp'
+  #     # DNS-over-TLS
+  #     - '853:853/tcp'
+  #     # DNS-over-QUIC
+  #     - '784:784/udp'
+  #     - '853:853/udp'
+  #     - '8853:8853/udp'
+  #     # DNSCrypt
+  #     - '5443:5443/tcp'
+  #     - '5443:5443/udp'
 
   code-server:
     image: lscr.io/linuxserver/code-server:latest
@@ -410,32 +416,32 @@ services:
       - /path/to/appdata/config:/config
     ports:
       - 8443:8443
-    restart: unless-stopped
+    restart: on-failure:5
 
-  meshnet:
-    image: ghcr.io/mattstechinfo/meshnet:latest
-    restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    env_file: meshnet/.env
-    hostname: iqbal    # Make sure hostname is set! Without it, every restart will add a new peer to your Meshnet.
+  # meshnet:
+  #   image: ghcr.io/mattstechinfo/meshnet:latest
+  #   restart: on-failure:5
+  #   cap_add:
+  #     - NET_ADMIN
+  #     - NET_RAW
+  #   env_file: meshnet/.env
+  #   hostname: iqbal    # Make sure hostname is set! Without it, every restart will add a new peer to your Meshnet.
 
 secrets:
-  sonarr_api_key:
-   file: ./secrets/sonarr_api_key
-  radarr_api_key:
-   file: ./secrets/radarr_api_key
-  lidarr_api_key:
-   file: ./secrets/lidarr_api_key
-  readarr_api_key:
-   file: ./secrets/readarr_api_key
-  notifiarr_api_key:
-    file: ./secrets/notifiarr_key
+  # sonarr_api_key:
+  #  file: ./secrets/sonarr_api_key
+  # radarr_api_key:
+  #  file: ./secrets/radarr_api_key
+  # lidarr_api_key:
+  #  file: ./secrets/lidarr_api_key
+  # readarr_api_key:
+  #  file: ./secrets/readarr_api_key
+  # notifiarr_api_key:
+  #   file: ./secrets/notifiarr_key
   nord_private_key:
     file: ./secrets/nord_private_key
   postgres_password:
     file: ./secrets/postgres_password
   email:
-    file: ./email_address
+    file: ./secrets/email_address
   
