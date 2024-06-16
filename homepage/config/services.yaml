@@ -3,72 +3,113 @@
 # https://gethomepage.dev/latest/configs/services
 
 - Library:
-      - Plex:
-            icon: plex.png
-            href: http://192.168.0.254:32400/web
-            description: Media server
-      - Navidrome:
-            icon: navidrome.png
-            href: http://192.168.0.254:4533
-            description: Music server
-      - Overseerr:
-            icon: overseerr.png
-            href: http://192.168.0.254:5055
-            description: Request management and media discovery
+        - Plex:
+                icon: plex.png
+                server: docker
+                container: plex
+                href: http://100.98.125.7:32400/web
+                description: Media server
+                widget:
+                      type: plex
+                      url: http://100.98.125.7:32400
+                      key: h5tzxwNYy8Th8P4y99kD
+                      fields: ["movies", "tv"]
+        - Navidrome:
+                icon: navidrome.png
+                href: http://100.98.125.7:4533
+                description: Music server
+        - Overseerr:
+                icon: overseerr.png
+                href: http://100.98.125.7:5055
+                description: Request management and media discovery
 
 - Request Management:
-      - Lidarr:
-            icon: lidarr.png
-            href: http://192.168.0.254:8686
-            description: Music request management
-      - Readarr:
-            icon: readarr.png
-            href: http://192.168.0.254:8787
-            description: Books request management
-      - Sonarr:
-            icon: sonarr.png
-            href: http://192.168.0.254:8989
-            description: TV management
-      - Radarr:
-            icon: radarr.png
-            href: http://192.168.0.254:7878
-            description: Movies Management
+        - Lidarr:
+                icon: lidarr.png
+                href: http://100.98.125.7:8686
+                description: Music request management
+                widget:
+                        type: lidarr
+                        url: http://100.98.125.7:8686
+                        key: 7c77e776e75c4f77b391ce011da1a7ff
+        - Readarr:
+                icon: readarr.png
+                href: http://100.98.125.7:8787
+                description: Books request management
+                widget:
+                        type: readarr
+                        url: http://100.98.125.7:8787
+                        key: a4b9c32a9ec94028bfb0adccadb432e4
+        - Sonarr:
+                icon: sonarr.png
+                href: http://100.98.125.7:8989
+                description: TV management
+                widget:
+                      type: sonarr
+                      url: http://100.98.125.7:8989
+                      key: af9254e205bc44bd99a81e325d6a3ea4
+                      fields: ["wanted", "queued", "series"]
+                      enableQueue: true # optional, defaults to false
+        - Radarr:
+                icon: radarr.png
+                href: http://100.98.125.7:7878
+                description: Movies Management
+                widget:
+                      type: radarr
+                      url: http://100.98.125.7:7878
+                      key: ec5b428b7ea04020bfa8df56024c79f8
+                      fields: ["wanted", "missing", "queued", "movies"]
+                      enableQueue: true # optional, defaults to false
 
 - Network Tools:
-      - Nginx:
-            icon: nginx.png
-            href: http://192.168.0.254:80
-            description: Reverse proxy
-      - Adguardhome:
-            icon: adguard-home.png
-            href: http://192.168.0.254:3001
-            description: Ad blocker
-      - Cloudflare:
-            icon: cloudflare.png
-            href: http://192.168.0.254:8082
-      - Portainer:
-            icon: portainer.png
-            href: http://192.168.0.254:9000
-
+        - Nginx:
+                icon: nginx.png
+                href: http://100.98.125.7:80
+                description: Reverse proxy
+        - Adguardhome:
+                icon: adguard-home.png
+                href: http://100.98.125.7:3001
+                description: Ad blocker
+        - Cloudflare:
+                icon: cloudflare.png
+                href: http://100.98.125.7:8082
+        - Portainer:
+                icon: portainer.png
+                href: http://100.98.125.7:9000
+                widget:
+                      type: portainer
+                      url: http://100.98.125.7:9000
+                      env: 2
+                      key: ptr_+RLIZNQ+sKeAI+PvNJ3En0sFg0PItpztB/LFoX5Tszg=
+                      fields: ["running", "stopped"]
 - Download:
-      - qBitTorrent:
-            icon: qbittorrent.png
-            href: http://192.168.0.254:1916
-            description: Torrent client
-      - SABnzbd:
-            icon: sabnzbd.png
-            href: http://192.168.0.254:8088
-            description: Usenet client
-      - Prowlarr:
-            icon: prowlarr.png
-            href: http://192.168.0.254:9696
-            description: Index handler
+        - qBitTorrent:
+                icon: qbittorrent.png
+                href: http://100.98.125.7:1916
+                description: Torrent client
+                widget:
+                      type: qbittorrent
+                      url: http://100.98.125.7:1916
+                      username: ushtorrent
+                      password: cinwym-giWfob-giqfi0
+        - SABnzbd:
+                icon: sabnzbd.png
+                href: http://100.98.125.7:8088
+                description: Usenet client
+                widget:
+                        type: sabnzbd
+                        url: http://100.98.125.7:8088
+                        key: 95ea3be48b074e44b9d2f41981fe7483
+                        fields: 
+        - Prowlarr:
+                icon: prowlarr.png
+                href: http://100.98.125.7:9696
+                description: Index handler
 
 - Utility:
-      - PGAdmin:
-            icon: pgadmin.png
-            href: http://192.168.0.254:8888
-      - code-server:
-            icon: code-server
-            href: http://192.168.0.254:8443
-            
+        - PGAdmin:
+                icon: pgadmin.png
+                href: http://100.98.125.7:8888
+        - code-server:
+                icon: code-server
+                href: http://100.98.125.7:8443
