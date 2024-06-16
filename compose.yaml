@@ -11,17 +11,19 @@ services:
       - ./homepage/config:/app/config
       - ./homepage/media:/app/public/images
       - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
-    restart: on-failure:5
+      - /media-server:/mnt/storage:ro
+    restart: on-failure:3
 
   plex:
     image: linuxserver/plex
     container_name: plex
-    restart: on-failure:5
+    restart: on-failure:3
     network_mode: host
     volumes:
       - ./plex/config:/config
-      - /media-server/data/media/tv:/tvbig
-      - /media-server/data/media/movies:/moviesbig
+      - /media-server/data/media/tv:/tv
+      - /media-server/data/media/movies:/movies
+      - /media-server/data/media/music:/music
     environment:
       - PUID=1000
       - PGID=1000
@@ -34,7 +36,7 @@ services:
   overseer:
     image: linuxserver/overseerr:latest
     container_name: overseer
-    restart: on-failure:5
+    restart: on-failure:3
     environment:
       - PUID=1000
       - PGID=1000
@@ -48,7 +50,7 @@ services:
   sonarr:
     image: linuxserver/sonarr
     container_name: sonarr
-    restart: on-failure:5
+    restart: on-failure:3
     environment:
       - PUID=1000
       - PGID=1000
@@ -56,14 +58,14 @@ services:
       - TZ=Etc/UTC
     volumes:
       - ./sonarr/config:/config
-      - /media-server:/data
+      - /media-server/data:/data
     ports:
       - "8989:8989"
 
   radarr:
     image: linuxserver/radarr
     container_name: radarr
-    restart: on-failure:5
+    restart: on-failure:3
     environment:
       - PUID=1000
       - PGID=1000
@@ -88,7 +90,7 @@ services:
       - /media-server/data:/data
     ports:
       - 8686:8686
-    restart: on-failure:5
+    restart: on-failure:3
 
   readarr:
     image: lscr.io/linuxserver/readarr:develop
@@ -103,12 +105,12 @@ services:
       - /media-server/data:/data
     ports:
       - 8787:8787
-    restart: on-failure:5
+    restart: on-failure:3
 
   prowlarr:
     image: linuxserver/prowlarr:latest
     container_name: prowlarr
-    restart: on-failure:5
+    restart: on-failure:3
     environment:
       - PUID=1000
       - PGID=1000
@@ -127,7 +129,7 @@ services:
     volumes:
       - ./flaresolverr/config:/app/config
     container_name: flaresolverr
-    
+
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_HTML=${LOG_HTML:-false}
@@ -138,13 +140,13 @@ services:
     depends_on:
       - nordlynx
     network_mode: service:nordlynx
-    restart: on-failure:5
+    restart: on-failure:3
 
   unpackerr:
     image: golift/unpackerr
     container_name: unpackerr
     volumes:
-    - /media-server/data:/data
+      - /media-server/data:/data
     environment:
       - PUID=1000
       - PGID=1000
@@ -162,33 +164,33 @@ services:
       - UN_FILE_MODE=0644
       - UN_DIR_MODE=0755
       # Sonarr Config
-      - UN_SONARR_0_URL=http://192.168.0.66:8989
-      - UN_SONARR_0_API_KEY=/run/secrets/sonarr_api_key
-      - UN_SONARR_0_PATHS_0=/downloads
+      - UN_SONARR_0_URL=http://192.168.0.254:8989
+      - UN_SONARR_0_API_KEY=af9254e205bc44bd99a81e325d6a3ea4
+      - UN_SONARR_0_PATHS_0=/data/torrents/tv-sonarr
       - UN_SONARR_0_PROTOCOLS=torrent
       - UN_SONARR_0_TIMEOUT=10s
       - UN_SONARR_0_DELETE_ORIG=false
       - UN_SONARR_0_DELETE_DELAY=5m
       # Radarr Config
-      - UN_RADARR_0_URL=http://192.168.0.66:7878
-      - UN_RADARR_0_API_KEY=/run/secrets/radarr_api_key
-      - UN_RADARR_0_PATHS_0=/downloads
+      - UN_RADARR_0_URL=http://192.168.0.254:7878``
+      - UN_RADARR_0_API_KEY=ec5b428b7ea04020bfa8df56024c79f8
+      - UN_RADARR_0_PATHS_0=/data/torrents/radarr
       - UN_RADARR_0_PROTOCOLS=torrent
       - UN_RADARR_0_TIMEOUT=10s
       - UN_RADARR_0_DELETE_ORIG=false
       - UN_RADARR_0_DELETE_DELAY=5m
       # Lidarr Config
-      - UN_LIDARR_0_URL=http://192.168.0.66:8686
-      - UN_LIDARR_0_API_KEY=/run/secrets/lidarr_api_key
-      - UN_LIDARR_0_PATHS_0=/downloads
+      - UN_LIDARR_0_URL=http://192.168.0.254:8686
+      - UN_LIDARR_0_API_KEY=7c77e776e75c4f77b391ce011da1a7ff
+      - UN_LIDARR_0_PATHS_0=/data/torrents/lidarr
       - UN_LIDARR_0_PROTOCOLS=torrent
       - UN_LIDARR_0_TIMEOUT=10s
       - UN_LIDARR_0_DELETE_ORIG=false
       - UN_LIDARR_0_DELETE_DELAY=5m
       # Readarr Config
-      - UN_READARR_0_URL=http://192.168.0.66:8787
-      - UN_READARR_0_API_KEY=/run/secrets/readarr_api_key
-      - UN_READARR_0_PATHS_0=/downloads
+      - UN_READARR_0_URL=http://192.168.0.254:8787
+      - UN_READARR_0_API_KEY=a4b9c32a9ec94028bfb0adccadb432e4
+      - UN_READARR_0_PATHS_0=/data/torrents/readarr
       - UN_READARR_0_PROTOCOLS=torrent
       - UN_READARR_0_TIMEOUT=10s
       - UN_READARR_0_DELETE_ORIG=false
@@ -200,12 +202,12 @@ services:
     #   - readarr_api_key
     security_opt:
       - no-new-privileges:true
-    restart: on-failure:5
+    restart: on-failure:3
 
   # cloudflared:
   #   image: cloudflare/cloudflared
   #   container_name: cloudflared-tunnel
-  #   restart: on-failure:5
+  #   restart: on-failure:3
   #   command: tunnel run
   #   environment:
   #     - TUNNEL_TOKEN=abcdefghijklmnopqrstuvwxyz0123456789
@@ -224,29 +226,31 @@ services:
       - ./qbittorrent/app/vuetorrent:/opt/vuetorrent/
       - ./qbittorrent/app/nightwalker:/opt/nightwalker/
       - /media-server/data/torrents:/data/torrents
-    restart: on-failure:5
+    restart: on-failure:3
     depends_on:
       - nordlynx
     network_mode: service:nordlynx
 
     # SABnzbd
   SABnzbd:
-      image: lscr.io/linuxserver/sabnzbd:latest
-      volumes:
-          - /path/to/config/sabnzbd:/config
-          - /host/data/usenet:/data/usenet
-      environment:
-          - PUID=1000
-          - PGID=1000
-          - UMASK=002
-      ports:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: sabnzbd
+
+    volumes:
+      - ./sabnzbd:/config
+      - /media-server/data/usenet:/data/usenet
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+    ports:
       - 8088:8080
-      restart: on-failure:5
+    restart: on-failure:3
 
   portainer:
     image: portainer/portainer-ce
     container_name: portainer
-    restart: on-failure:5
+    restart: on-failure:3
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./portainer/data:/data
@@ -256,7 +260,7 @@ services:
   postgres:
     image: postgres:latest
     container_name: postgres
-    restart: on-failure:5
+    restart: on-failure:3
     ports:
       - "5432:5432"
     secrets:
@@ -267,7 +271,7 @@ services:
   pgAdmin:
     image: dpage/pgadmin4:latest
     container_name: pgAdmin
-    restart: on-failure:5
+    restart: on-failure:3
     ports:
       - "8888:80"
     secrets:
@@ -276,37 +280,36 @@ services:
     environment:
       - PGADMIN_DEFAULT_EMAIL=oisinpeppard@hotmail.com
       - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/postgres_password
-  
+
   nginx:
     container_name: nginx
-    image: 'jc21/nginx-proxy-manager:latest'
+    image: "jc21/nginx-proxy-manager:latest"
     restart: unless-stopped
     ports:
       # These ports are in format <host-port>:<container-port>
-      - '80:80' # Public HTTP Port
-      - '443:443' # Public HTTPS Port
-      - '81:81' # Admin Web Port
+      - "80:80" # Public HTTP Port
+      - "443:443" # Public HTTPS Port
+      - "81:81" # Admin Web Port
       # - '21:21' # FTP
 
     environment:
-
-      DISABLE_IPV6: 'true'
+      DISABLE_IPV6: "true"
 
     volumes:
-      - ./data:/data
+      - ./nginx:/data
       - ./letsencrypt:/etc/letsencrypt
   nordlynx:
     container_name: nordlynx
     image: ghcr.io/bubuntux/nordlynx
     cap_add:
       - NET_ADMIN #required
-      - SYS_MODULE 
+      - SYS_MODULE
     environment:
       - PRIVATE_KEY_FILE=/run/secrets/nord_private_key
       - QUERY=filters\[servers_groups\]\[identifier\]=legacy_p2p ##
       - NET_LOCAL=192.168.0.0/16 ##
     secrets:
-      - nord_private_key 
+      - nord_private_key
     hostname: nordlynx
     ports:
       - 6881:6881
@@ -315,18 +318,19 @@ services:
       - 9696:9696 # port forwarded for the Prowlarr container
       - 8191:8191 # port forwarded for the flaresolverr container
     sysctls:
-        - net.ipv4.conf.all.src_valid_mark=1   # maybe
-        - net.ipv4.conf.all.rp_filter=2        # maybe; set reverse path filter to loose mode
-        - net.ipv6.conf.all.disable_ipv6=1     # disable ipv6; recommended if using ipv4 only
-        
+      - net.ipv4.conf.all.src_valid_mark=1 # maybe
+      - net.ipv4.conf.all.rp_filter=2 # maybe; set reverse path filter to loose mode
+      - net.ipv6.conf.all.disable_ipv6=1 # disable ipv6; recommended if using ipv4 only
+      - net.ipv4.ip_forward=1
+
   navidrome:
     image: deluan/navidrome:latest
     container_name: navidrome
-    user: 1000:1000 
-  
+    user: 1000:1000
+
     ports:
       - "4533:4533"
-    restart: on-failure:5
+    restart: on-failure:3
     environment:
       # Optional: put your config options customization here. Examples:
       ND_SCANSCHEDULE: 1h
@@ -335,7 +339,7 @@ services:
       ND_BASEURL: ""
     volumes:
       - "./navidrome:/data"
-      - "/media-server/data/music/:/music:ro"
+      - "/media-server/data/media/music/:/music:ro"
 
   calibre-web:
     image: lscr.io/linuxserver/calibre-web:latest
@@ -351,19 +355,19 @@ services:
       - /path/to/calibre/library:/books
     ports:
       - 8083:8083
-    restart: on-failure:5
-      
+    restart: on-failure:3
+
   notifiarr:
     container_name: notifiarr
     hostname: notifiarr
     image: golift/notifiarr
-    restart: on-failure:5
+    restart: on-failure:3
     ports:
       - "5454:5454"
     volumes:
       - ./notifiarr:/config
       - /var/run/utmp:/var/run/utmp
-      - /etc/machine-id:/etc/machine-id 
+      - /etc/machine-id:/etc/machine-id
     environment:
       - DN_API_KEY=/run/secrets/notifiarr_api_key
     # secrets:
@@ -373,7 +377,7 @@ services:
   #   image: 'adguard/adguardhome:latest'
   #   container_name: 'adguard'
   #   hostname: 'adguard'
-  #   restart: 'on-failure:5'
+  #   restart: 'on-failure:3'
   #   # networks:
   #   #   - 'adguard'
   #   volumes:
@@ -416,11 +420,11 @@ services:
       - /path/to/appdata/config:/config
     ports:
       - 8443:8443
-    restart: on-failure:5
+    restart: on-failure:3
 
   # meshnet:
   #   image: ghcr.io/mattstechinfo/meshnet:latest
-  #   restart: on-failure:5
+  #   restart: on-failure:3
   #   cap_add:
   #     - NET_ADMIN
   #     - NET_RAW
@@ -444,4 +448,3 @@ secrets:
     file: ./secrets/postgres_password
   email:
     file: ./secrets/email_address
-  
