@@ -12,12 +12,12 @@ services:
       - ./homepage/media:/app/public/images
       - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
       - /media-server:/mnt/storage:ro
-    restart: on-failure:3
+    restart: always
 
   plex:
     image: linuxserver/plex
     container_name: plex
-    restart: on-failure:3
+    restart: always
     network_mode: host
     volumes:
       - ./plex/config:/config
@@ -36,7 +36,7 @@ services:
   overseer:
     image: linuxserver/overseerr:latest
     container_name: overseer
-    restart: on-failure:3
+    restart: always
     environment:
       - PUID=1000
       - PGID=1000
@@ -50,7 +50,7 @@ services:
   sonarr:
     image: linuxserver/sonarr
     container_name: sonarr
-    restart: on-failure:3
+    restart: always
     environment:
       - PUID=1000
       - PGID=1000
@@ -65,7 +65,7 @@ services:
   radarr:
     image: linuxserver/radarr
     container_name: radarr
-    restart: on-failure:3
+    restart: always
     environment:
       - PUID=1000
       - PGID=1000
@@ -90,7 +90,7 @@ services:
       - /media-server/data:/data
     ports:
       - 8686:8686
-    restart: on-failure:3
+    restart: always
 
   readarr:
     image: lscr.io/linuxserver/readarr:develop
@@ -105,12 +105,12 @@ services:
       - /media-server/data:/data
     ports:
       - 8787:8787
-    restart: on-failure:3
+    restart: always
 
   prowlarr:
     image: linuxserver/prowlarr:latest
     container_name: prowlarr
-    restart: on-failure:3
+    restart: always
     environment:
       - PUID=1000
       - PGID=1000
@@ -140,7 +140,7 @@ services:
     depends_on:
       - nordlynx
     network_mode: service:nordlynx
-    restart: on-failure:3
+    restart: always
 
   unpackerr:
     image: golift/unpackerr
@@ -202,12 +202,12 @@ services:
     #   - readarr_api_key
     security_opt:
       - no-new-privileges:true
-    restart: on-failure:3
+    restart: always
 
   # cloudflared:
   #   image: cloudflare/cloudflared
   #   container_name: cloudflared-tunnel
-  #   restart: on-failure:3
+  #   restart: always
   #   command: tunnel run
   #   environment:
   #     - TUNNEL_TOKEN=abcdefghijklmnopqrstuvwxyz0123456789
@@ -226,7 +226,7 @@ services:
       - ./qbittorrent/app/vuetorrent:/opt/vuetorrent/
       - ./qbittorrent/app/nightwalker:/opt/nightwalker/
       - /media-server/data/torrents:/data/torrents
-    restart: on-failure:3
+    restart: always
     depends_on:
       - nordlynx
     network_mode: service:nordlynx
@@ -245,12 +245,12 @@ services:
       - UMASK=002
     ports:
       - 8088:8080
-    restart: on-failure:3
+    restart: always
 
   portainer:
     image: portainer/portainer-ce
     container_name: portainer
-    restart: on-failure:3
+    restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./portainer/data:/data
@@ -260,7 +260,7 @@ services:
   postgres:
     image: postgres:latest
     container_name: postgres
-    restart: on-failure:3
+    restart: always
     ports:
       - "5432:5432"
     secrets:
@@ -271,7 +271,7 @@ services:
   pgAdmin:
     image: dpage/pgadmin4:latest
     container_name: pgAdmin
-    restart: on-failure:3
+    restart: always
     ports:
       - "8888:80"
     secrets:
@@ -330,7 +330,7 @@ services:
 
     ports:
       - "4533:4533"
-    restart: on-failure:3
+    restart: always
     environment:
       # Optional: put your config options customization here. Examples:
       ND_SCANSCHEDULE: 1h
@@ -355,13 +355,13 @@ services:
       - /path/to/calibre/library:/books
     ports:
       - 8083:8083
-    restart: on-failure:3
+    restart: always
 
   notifiarr:
     container_name: notifiarr
     hostname: notifiarr
     image: golift/notifiarr
-    restart: on-failure:3
+    restart: always
     ports:
       - "5454:5454"
     volumes:
@@ -420,11 +420,11 @@ services:
       - /path/to/appdata/config:/config
     ports:
       - 8443:8443
-    restart: on-failure:3
+    restart: always
 
   # meshnet:
   #   image: ghcr.io/mattstechinfo/meshnet:latest
-  #   restart: on-failure:3
+  #   restart: always
   #   cap_add:
   #     - NET_ADMIN
   #     - NET_RAW
@@ -432,16 +432,16 @@ services:
   #   hostname: iqbal    # Make sure hostname is set! Without it, every restart will add a new peer to your Meshnet.
 
 secrets:
-  # sonarr_api_key:
-  #  file: ./secrets/sonarr_api_key
-  # radarr_api_key:
-  #  file: ./secrets/radarr_api_key
-  # lidarr_api_key:
-  #  file: ./secrets/lidarr_api_key
-  # readarr_api_key:
-  #  file: ./secrets/readarr_api_key
-  # notifiarr_api_key:
-  #   file: ./secrets/notifiarr_key
+  sonarr_api_key:
+   file: ./secrets/sonarr_api_key
+  radarr_api_key:
+   file: ./secrets/radarr_api_key
+  lidarr_api_key:
+   file: ./secrets/lidarr_api_key
+  readarr_api_key:
+   file: ./secrets/readarr_api_key
+  notifiarr_api_key:
+    file: ./secrets/notifiarr_key
   nord_private_key:
     file: ./secrets/nord_private_key
   postgres_password:
