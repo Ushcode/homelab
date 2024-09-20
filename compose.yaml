@@ -1,3 +1,5 @@
+# <host-port>:<container-port>
+
 services:
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
@@ -5,14 +7,16 @@ services:
     environment:
       - PUID:1000
       - PGID:1000
+      - TZ=Europe/London
     ports:
       - 3000:3000
     volumes:
       - ./homepage/config:/app/config
       - ./homepage/media:/app/public/images
-      - /var/run/docker.sock:/var/run/docker.sock:ro # optional, for docker integrations
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /media-server:/mnt/storage:ro
     restart: always
+
 
   plex:
     image: linuxserver/plex
@@ -29,9 +33,10 @@ services:
       - PGID=1000
       - PLEX_UID=1000
       - PLEX_GUID=1000
-      - TZ=Etc/UTC
+      - TZ=Europe/London
       - VERSION=docker
       - PLEX_CLAIM=claim-i7Mwm5AsKJLpzbmktxR7
+
 
   overseer:
     image: linuxserver/overseerr:latest
@@ -40,12 +45,12 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
-      # - OVERSEER_DATABASE_URL=postgres:///overseerr.db # must configure
+      - TZ=Europe/London
     volumes:
       - ./overseerr/config:/config
     ports:
       - 5055:5055
+
 
   sonarr:
     image: linuxserver/sonarr
@@ -55,7 +60,7 @@ services:
       - PUID=1000
       - PGID=1000
       - UMASK=022
-      - TZ=Etc/UTC
+      - TZ=Europe/London
     volumes:
       - ./sonarr/config:/config
       - /media-server/data:/data
@@ -70,12 +75,13 @@ services:
       - PUID=1000
       - PGID=1000
       - UMASK=022
-      - TZ=Etc/UTC
+      - TZ=Europe/London
     volumes:
       - ./radarr/config:/config
       - /media-server/data:/data
     ports:
       - 7878:7878
+
 
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
@@ -84,7 +90,7 @@ services:
       - PUID=1000
       - PGID=1000
       - UMASK=022
-      - TZ=Etc/UTC
+      - TZ=Europe/London
     volumes:
       - ./lidarr/config:/config
       - /media-server/data:/data
@@ -99,7 +105,7 @@ services:
       - PUID=1000
       - PGID=1000
       - UMASK=022
-      - TZ=Etc/UTC
+      - TZ=Europe/London
     volumes:
       - ./readarr/data:/config
       - /media-server/data:/data
@@ -114,32 +120,30 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=Europe/London
     volumes:
       - ./prowlarr/config:/config
-    # ports:
-    #   - 9696:9696
-    depends_on:
-      - nordlynx
-    network_mode: service:nordlynx
+    # depends_on:
+    #   - nordlynx
+    # network_mode: service:nordlynx
+    ports:
+      - 9696:9696
 
   flaresolverr:
-    # DockerHub mirror flaresolverr/flaresolverr:latest
     image: ghcr.io/flaresolverr/flaresolverr:latest
     volumes:
       - ./flaresolverr/config:/app/config
     container_name: flaresolverr
-
+    ports:
+      - 8191:8191
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - LOG_HTML=${LOG_HTML:-false}
       - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
-      - TZ=Etc/UTC
-    # ports:
-    #   - "${PORT:-8191}:8191"
-    depends_on:
-      - nordlynx
-    network_mode: service:nordlynx
+      - TZ=Europe/London
+    # depends_on:
+    #   - nordlynx
+    # network_mode: service:nordlynx
     restart: always
 
   unpackerr:
@@ -150,7 +154,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=Europe/London
       # General config
       - UN_DEBUG=false
       - UN_LOG_FILE=
@@ -166,32 +170,32 @@ services:
       # Sonarr Config
       - UN_SONARR_0_URL=http://192.168.0.254:8989
       - UN_SONARR_0_API_KEY=af9254e205bc44bd99a81e325d6a3ea4
-      - UN_SONARR_0_PATHS_0=/data/torrents/tv-sonarr
-      - UN_SONARR_0_PROTOCOLS=torrent
+      - UN_SONARR_0_PATHS_0=/data/torrents/tv-sonarr,/data/usenet/complete/tv
+      - UN_SONARR_0_PROTOCOLS=torrent,usenet
       - UN_SONARR_0_TIMEOUT=10s
       - UN_SONARR_0_DELETE_ORIG=false
       - UN_SONARR_0_DELETE_DELAY=5m
       # Radarr Config
       - UN_RADARR_0_URL=http://192.168.0.254:7878``
       - UN_RADARR_0_API_KEY=ec5b428b7ea04020bfa8df56024c79f8
-      - UN_RADARR_0_PATHS_0=/data/torrents/radarr
-      - UN_RADARR_0_PROTOCOLS=torrent
+      - UN_RADARR_0_PATHS_0=/data/torrents/radarr,/data/usenet/complete/movies
+      - UN_RADARR_0_PROTOCOLS=torrent,usenet
       - UN_RADARR_0_TIMEOUT=10s
       - UN_RADARR_0_DELETE_ORIG=false
       - UN_RADARR_0_DELETE_DELAY=5m
       # Lidarr Config
       - UN_LIDARR_0_URL=http://192.168.0.254:8686
       - UN_LIDARR_0_API_KEY=7c77e776e75c4f77b391ce011da1a7ff
-      - UN_LIDARR_0_PATHS_0=/data/torrents/lidarr
-      - UN_LIDARR_0_PROTOCOLS=torrent
+      - UN_LIDARR_0_PATHS_0=/data/torrents/lidarr,/data/usenet/complete/music
+      - UN_LIDARR_0_PROTOCOLS=torrent,usenet
       - UN_LIDARR_0_TIMEOUT=10s
       - UN_LIDARR_0_DELETE_ORIG=false
       - UN_LIDARR_0_DELETE_DELAY=5m
       # Readarr Config
       - UN_READARR_0_URL=http://192.168.0.254:8787
       - UN_READARR_0_API_KEY=a4b9c32a9ec94028bfb0adccadb432e4
-      - UN_READARR_0_PATHS_0=/data/torrents/readarr
-      - UN_READARR_0_PROTOCOLS=torrent
+      - UN_READARR_0_PATHS_0=/data/torrents/readarr,/data/usenet/complete/books
+      - UN_READARR_0_PROTOCOLS=torrent,usenet
       - UN_READARR_0_TIMEOUT=10s
       - UN_READARR_0_DELETE_ORIG=false
       - UN_READARR_0_DELETE_DELAY=5m
@@ -204,13 +208,14 @@ services:
       - no-new-privileges:true
     restart: always
 
-  # cloudflared:
-  #   image: cloudflare/cloudflared
-  #   container_name: cloudflared-tunnel
-  #   restart: always
-  #   command: tunnel run
-  #   environment:
-  #     - TUNNEL_TOKEN=abcdefghijklmnopqrstuvwxyz0123456789
+  cloudflared:
+    image: cloudflare/cloudflared
+    container_name: cloudflared-tunnel
+    restart: always
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=eyJhIjoiN2YwNGE5ZjY5Y2MwMGRlZjQ3MjM2NGFiNzI4YzI2YTkiLCJ0IjoiODM2Y2RjZjUtOGNhMC00ZjY1LWE0MjYtYjI2ZGNiZTQ3OTU1IiwicyI6IlpEQXpObVl6TjJJdE4yWmlNeTAwTTJaakxUaGtPREV0TlRVMk1UQmhOV0V6TmpNMSJ9
+      - TZ=Europe/London
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
@@ -218,24 +223,25 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Etc/UTC
+      - TZ=Europe/London
       - WEBUI_PORT=1916
       - TORRENTING_PORT=6881
+    ports:
+      - 1916:1916
     volumes:
       - ./qbittorrent/config:/config
       - ./qbittorrent/app/vuetorrent:/opt/vuetorrent/
       - ./qbittorrent/app/nightwalker:/opt/nightwalker/
       - /media-server/data/torrents:/data/torrents
     restart: always
-    depends_on:
-      - nordlynx
-    network_mode: service:nordlynx
+    # depends_on:
+    #   - nordlynx
+    # network_mode: service:nordlynx
 
-    # SABnzbd
+
   SABnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
     container_name: sabnzbd
-
     volumes:
       - ./sabnzbd:/config
       - /media-server/data/usenet:/data/usenet
@@ -243,116 +249,86 @@ services:
       - PUID=1000
       - PGID=1000
       - UMASK=002
+      - TZ=Europe/London
     ports:
       - 8088:8080
     restart: always
-
-  portainer:
-    image: portainer/portainer-ce
-    container_name: portainer
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./portainer/data:/data
-    ports:
-      - "9000:9000"
-
-  postgres:
-    image: postgres:latest
-    container_name: postgres
-    restart: always
-    ports:
-      - "5432:5432"
-    secrets:
-      - postgres_password
-    environment:
-      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
-
-  pgAdmin:
-    image: dpage/pgadmin4:latest
-    container_name: pgAdmin
-    restart: always
-    ports:
-      - "8888:80"
-    secrets:
-      - email
-      - postgres_password
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=oisinpeppard@hotmail.com
-      - PGADMIN_DEFAULT_PASSWORD_FILE=/run/secrets/postgres_password
 
   nginx:
     container_name: nginx
     image: "jc21/nginx-proxy-manager:latest"
     restart: unless-stopped
     ports:
-      # These ports are in format <host-port>:<container-port>
       - "80:80" # Public HTTP Port
       - "443:443" # Public HTTPS Port
       - "81:81" # Admin Web Port
       # - '21:21' # FTP
-
     environment:
-      DISABLE_IPV6: "true"
-
+      - TZ=Europe/London
+      - DISABLE_IPV6=true
     volumes:
       - ./nginx:/data
       - ./letsencrypt:/etc/letsencrypt
+      
   nordlynx:
     container_name: nordlynx
     image: ghcr.io/bubuntux/nordlynx
     cap_add:
-      - NET_ADMIN #required
+      - NET_ADMIN 
       - SYS_MODULE
     environment:
       - PRIVATE_KEY_FILE=/run/secrets/nord_private_key
       - QUERY=filters\[servers_groups\]\[identifier\]=legacy_p2p ##
-      - NET_LOCAL=192.168.0.0/16 ##
+      - NET_LOCAL=192.168.0.0/16 
+      - TZ=Europe/London
     secrets:
       - nord_private_key
     hostname: nordlynx
     ports:
       - 6881:6881
       - 6881:6881/udp
-      - 1916:1916 # ports forwarded for the qBittorrent container
-      - 9696:9696 # port forwarded for the Prowlarr container
-      - 8191:8191 # port forwarded for the flaresolverr container
+      # - 1916:1916 # ports forwarded for the qBittorrent container
+      # - 9696:9696 # port forwarded for the Prowlarr container
+      # - 8191:8191 # port forwarded for the flaresolverr container
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1 # maybe
       - net.ipv4.conf.all.rp_filter=2 # maybe; set reverse path filter to loose mode
       - net.ipv6.conf.all.disable_ipv6=1 # disable ipv6; recommended if using ipv4 only
       - net.ipv4.ip_forward=1
 
-  navidrome:
-    image: deluan/navidrome:latest
-    container_name: navidrome
-    user: 1000:1000
-
-    ports:
-      - "4533:4533"
-    restart: always
+  calibre:
+    image: lscr.io/linuxserver/calibre:latest
+    container_name: calibre
+    security_opt:
+      - seccomp:unconfined #optional
     environment:
-      # Optional: put your config options customization here. Examples:
-      ND_SCANSCHEDULE: 1h
-      ND_LOGLEVEL: info
-      ND_SESSIONTIMEOUT: 24h
-      ND_BASEURL: ""
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - PASSWORD= #optional
+      - CLI_ARGS= #optional
     volumes:
-      - "./navidrome:/data"
-      - "/media-server/data/media/music/:/music:ro"
+      - ./calibre:/config
+      - /media-server/data/media/books:/books
+    ports:
+      - 8082:8080
+      - 8181:8181
+      - 8081:8081
+    restart: unless-stopped
 
   calibre-web:
     image: lscr.io/linuxserver/calibre-web:latest
     container_name: calibre-web
     environment:
       - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
+      - PGID=1000 
+      - TZ=Europe/London
       - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
       - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
     volumes:
-      - /path/to/data:/config
-      - /path/to/calibre/library:/books
+      - ./calibre-web:/config
+      - ./calibre/:/calibre
+      - /media-server/data/media/books:/books
     ports:
       - 8083:8083
     restart: always
@@ -370,8 +346,7 @@ services:
       - /etc/machine-id:/etc/machine-id
     environment:
       - DN_API_KEY=/run/secrets/notifiarr_api_key
-    # secrets:
-    #   - notifiarr_api_key
+      - TZ=Europe/London
 
   # adguardhome:
   #   image: 'adguard/adguardhome:latest'
@@ -406,30 +381,6 @@ services:
   #     # DNSCrypt
   #     - '5443:5443/tcp'
   #     - '5443:5443/udp'
-
-  code-server:
-    image: lscr.io/linuxserver/code-server:latest
-    container_name: code-server
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-      - PROXY_DOMAIN=code-server.my.domain #optional
-      - DEFAULT_WORKSPACE=/config/workspace #optional
-    volumes:
-      - /path/to/appdata/config:/config
-    ports:
-      - 8443:8443
-    restart: always
-
-  # meshnet:
-  #   image: ghcr.io/mattstechinfo/meshnet:latest
-  #   restart: always
-  #   cap_add:
-  #     - NET_ADMIN
-  #     - NET_RAW
-  #   env_file: meshnet/.env
-  #   hostname: iqbal    # Make sure hostname is set! Without it, every restart will add a new peer to your Meshnet.
 
 secrets:
   sonarr_api_key:
