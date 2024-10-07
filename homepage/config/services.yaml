@@ -11,17 +11,29 @@
                 description: Media server
                 widget:
                       type: plex
-                      url: http://100.98.125.7:32400
+                      url: http://192.168.0.254:32400
                       key: h5tzxwNYy8Th8P4y99kD
                       fields: ["movies", "tv"]
-        - Navidrome:
-                icon: navidrome.png
-                href: http://100.98.125.7:4533
-                description: Music server
         - Overseerr:
                 icon: overseerr.png
                 href: http://100.98.125.7:5055
                 description: Request management and media discovery
+
+        - Notifiarr:
+                icon: notifiarr.png
+                href: http://100.98.125.7:5454
+
+        - Calbre Web:
+                icon: calibre-web.png
+                href: http://100.98.125.7:8083
+                container: calibre-web
+
+        - Calbre (Web UI):
+                icon: calibre.png
+                href: http://100.98.125.7:8082
+                container: calibre
+
+
 
 - Request Management:
         - Lidarr:
@@ -32,6 +44,8 @@
                         type: lidarr
                         url: http://100.98.125.7:8686
                         key: 7c77e776e75c4f77b391ce011da1a7ff
+                        enableQueue: true # optional, defaults to false
+
         - Readarr:
                 icon: readarr.png
                 href: http://100.98.125.7:8787
@@ -62,10 +76,10 @@
                       enableQueue: true # optional, defaults to false
 
 - Network Tools:
-        - Nginx:
-                icon: nginx.png
-                href: http://100.98.125.7:80
-                description: Reverse proxy
+        # - Nginx:
+        #         icon: nginx.png
+        #         href: http://100.98.125.7:80
+        #         description: Reverse proxy
         - Adguardhome:
                 icon: adguard-home.png
                 href: http://100.98.125.7:3001
@@ -73,15 +87,7 @@
         - Cloudflare:
                 icon: cloudflare.png
                 href: http://100.98.125.7:8082
-        - Portainer:
-                icon: portainer.png
-                href: http://100.98.125.7:9000
-                widget:
-                      type: portainer
-                      url: http://100.98.125.7:9000
-                      env: 2
-                      key: ptr_+RLIZNQ+sKeAI+PvNJ3En0sFg0PItpztB/LFoX5Tszg=
-                      fields: ["running", "stopped"]
+
 - Download:
         - qBitTorrent:
                 icon: qbittorrent.png
@@ -106,10 +112,4 @@
                 href: http://100.98.125.7:9696
                 description: Index handler
 
-- Utility:
-        - PGAdmin:
-                icon: pgadmin.png
-                href: http://100.98.125.7:8888
-        - code-server:
-                icon: code-server
-                href: http://100.98.125.7:8443
+
