@@ -11,7 +11,7 @@
                 description: Media server
                 widget:
                       type: plex
-                      url: http://192.168.0.254:32400
+                      url: http://192.168.0.13:32400
                       key: h5tzxwNYy8Th8P4y99kD
                       fields: ["movies", "tv"]
         - Overseerr:
