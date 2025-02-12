@@ -17,7 +17,6 @@ services:
       - /media-server:/mnt/storage:ro
     restart: always
 
-
   plex:
     image: linuxserver/plex
     container_name: plex
@@ -37,7 +36,6 @@ services:
       - VERSION=docker
       - PLEX_CLAIM=claim-i7Mwm5AsKJLpzbmktxR7
 
-
   overseer:
     image: linuxserver/overseerr:latest
     container_name: overseer
@@ -50,7 +48,6 @@ services:
       - ./overseerr/config:/config
     ports:
       - 5055:5055
-
 
   sonarr:
     image: linuxserver/sonarr
@@ -81,7 +78,6 @@ services:
       - /media-server/data:/data
     ports:
       - 7878:7878
-
 
   lidarr:
     image: lscr.io/linuxserver/lidarr:latest
@@ -208,15 +204,6 @@ services:
       - no-new-privileges:true
     restart: always
 
-  cloudflared:
-    image: cloudflare/cloudflared
-    container_name: cloudflared-tunnel
-    restart: always
-    command: tunnel run
-    environment:
-      - TUNNEL_TOKEN=eyJhIjoiN2YwNGE5ZjY5Y2MwMGRlZjQ3MjM2NGFiNzI4YzI2YTkiLCJ0IjoiODM2Y2RjZjUtOGNhMC00ZjY1LWE0MjYtYjI2ZGNiZTQ3OTU1IiwicyI6IlpEQXpObVl6TjJJdE4yWmlNeTAwTTJaakxUaGtPREV0TlRVMk1UQmhOV0V6TmpNMSJ9
-      - TZ=Europe/London
-
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
@@ -237,7 +224,6 @@ services:
     # depends_on:
     #   - nordlynx
     # network_mode: service:nordlynx
-
 
   SABnzbd:
     image: lscr.io/linuxserver/sabnzbd:latest
@@ -269,32 +255,47 @@ services:
     volumes:
       - ./nginx:/data
       - ./letsencrypt:/etc/letsencrypt
-      
-  nordlynx:
-    container_name: nordlynx
-    image: ghcr.io/bubuntux/nordlynx
-    cap_add:
-      - NET_ADMIN 
-      - SYS_MODULE
-    environment:
-      - PRIVATE_KEY_FILE=/run/secrets/nord_private_key
-      - QUERY=filters\[servers_groups\]\[identifier\]=legacy_p2p ##
-      - NET_LOCAL=192.168.0.0/16 
-      - TZ=Europe/London
-    secrets:
-      - nord_private_key
-    hostname: nordlynx
-    ports:
-      - 6881:6881
-      - 6881:6881/udp
-      # - 1916:1916 # ports forwarded for the qBittorrent container
-      # - 9696:9696 # port forwarded for the Prowlarr container
-      # - 8191:8191 # port forwarded for the flaresolverr container
-    sysctls:
-      - net.ipv4.conf.all.src_valid_mark=1 # maybe
-      - net.ipv4.conf.all.rp_filter=2 # maybe; set reverse path filter to loose mode
-      - net.ipv6.conf.all.disable_ipv6=1 # disable ipv6; recommended if using ipv4 only
-      - net.ipv4.ip_forward=1
+
+  # nordlynx:
+  #   container_name: nordlynx
+  #   image: ghcr.io/bubuntux/nordlynx
+  #   cap_add:
+  #     - NET_ADMIN
+  #   environment:
+  #     - PRIVATE_KEY=+NARn8mufh70/9sThSD062U4VVzd/SYH7ErzKEj5tVk=
+  #     - TZ=Europe/London
+  #     - LOG_LEVEL=debug # Add this line to enable debug logging
+  #     - NORDLYNX_DEBUG=1 # Add this line to enable NordLynx debug mode
+  #     - CONNECT=United_Kingdom
+  # secrets:
+  #   - nord_private_key
+  # hostname: nordlynx
+  # ports:
+  #   - 6881:6881
+  #   - 6881:6881/udp
+  #   - 1916:1916
+  #   - 9696:9696
+  #   - 8191:8191
+  # sysctls:
+  #   - net.ipv4.conf.all.src_valid_mark=1
+  #   - net.ipv4.conf.all.rp_filter=2
+  #   - net.ipv6.conf.all.disable_ipv6=1
+
+  # nordvpn:
+  #   image: ghcr.io/bubuntux/nordvpn
+  #   container_name: nordpvn
+  #   cap_add:
+  #     - NET_ADMIN               # Required
+  #     - NET_RAW                 # Required
+  #   environment:                # Review https://github.com/bubuntux/nordvpn#environment-variables
+  #     - TOKEN=e9f2abf3373b8e9dd3b476963844c239ff4df38aab2ff1f45a80c9c404ae0ff0     # Required
+  #     - CONNECT=United_Kingdom
+  #     - TECHNOLOGY=NordLynx
+  #     - NETWORK=192.168.1.0/24  # So it can be accessed within the local network
+  #   ports:
+  #     - 8080:8080
+  #   sysctls:
+  #     - net.ipv6.conf.all.disable_ipv6=1  # Recomended if using ipv4 only
 
   calibre:
     image: lscr.io/linuxserver/calibre:latest
@@ -321,7 +322,7 @@ services:
     container_name: calibre-web
     environment:
       - PUID=1000
-      - PGID=1000 
+      - PGID=1000
       - TZ=Europe/London
       - DOCKER_MODS=linuxserver/mods:universal-calibre #optional
       - OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
@@ -348,49 +349,15 @@ services:
       - DN_API_KEY=/run/secrets/notifiarr_api_key
       - TZ=Europe/London
 
-  # adguardhome:
-  #   image: 'adguard/adguardhome:latest'
-  #   container_name: 'adguard'
-  #   hostname: 'adguard'
-  #   restart: 'on-failure:3'
-  #   # networks:
-  #   #   - 'adguard'
-  #   volumes:
-  #     - /etc/localtime:/etc/localtime:ro
-  #     - ./adguard/data:/opt/adguardhome/work
-  #     - ./adguard/conf:/opt/adguardhome/conf
-  #     # The next two lines are only necessary if you're using a custom SSL cert
-  #     # signed by a private CA trusted by your host machine:
-  #     #- '/usr/local/share/ca-certificates:/usr/local/share/ca-certificates'
-  #     #- '/etc/ssl/certs:/etc/ssl/certs'
-  #   ports:
-  #     # Plain DNS
-  #     - '53:53/tcp'
-  #     - '53:53/udp'
-  #     # AdGuard Home Admin Panel as well as DNS-over-HTTPS
-  #     - '80:80/tcp'
-  #     - '443:443/tcp'
-  #     - '443:443/udp'
-  #     - '3001:3000/tcp'
-  #     # DNS-over-TLS
-  #     - '853:853/tcp'
-  #     # DNS-over-QUIC
-  #     - '784:784/udp'
-  #     - '853:853/udp'
-  #     - '8853:8853/udp'
-  #     # DNSCrypt
-  #     - '5443:5443/tcp'
-  #     - '5443:5443/udp'
-
 secrets:
   sonarr_api_key:
-   file: ./secrets/sonarr_api_key
+    file: ./secrets/sonarr_api_key
   radarr_api_key:
-   file: ./secrets/radarr_api_key
+    file: ./secrets/radarr_api_key
   lidarr_api_key:
-   file: ./secrets/lidarr_api_key
+    file: ./secrets/lidarr_api_key
   readarr_api_key:
-   file: ./secrets/readarr_api_key
+    file: ./secrets/readarr_api_key
   notifiarr_api_key:
     file: ./secrets/notifiarr_key
   nord_private_key:

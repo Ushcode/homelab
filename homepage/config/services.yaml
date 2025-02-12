@@ -75,19 +75,6 @@
                       fields: ["wanted", "missing", "queued", "movies"]
                       enableQueue: true # optional, defaults to false
 
-- Network Tools:
-        # - Nginx:
-        #         icon: nginx.png
-        #         href: http://100.98.125.7:80
-        #         description: Reverse proxy
-        - Adguardhome:
-                icon: adguard-home.png
-                href: http://100.98.125.7:3001
-                description: Ad blocker
-        - Cloudflare:
-                icon: cloudflare.png
-                href: http://100.98.125.7:8082
-
 - Download:
         - qBitTorrent:
                 icon: qbittorrent.png
