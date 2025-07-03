@@ -100,3 +100,10 @@
                 description: Index handler
 
 
+- Home Automation:
+        - Homebridge:
+                icon: homebridge.png
+                href: http://100.98.125.7:8581
+                widget:
+                      type: homebridge
+                      url: http://100.98.125.7:8581

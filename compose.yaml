@@ -8,6 +8,7 @@ services:
       - PUID:1000
       - PGID:1000
       - TZ=Europe/London
+      - HOMEPAGE_ALLOWED_HOSTS=iqbal:3000,192.168.0.13:3000,100.98.125.7:3000
     ports:
       - 3000:3000
     volumes:
@@ -347,6 +348,26 @@ services:
       - /etc/machine-id:/etc/machine-id
     environment:
       - DN_API_KEY=/run/secrets/notifiarr_api_key
+      - TZ=Europe/London
+
+  homebridge:
+    image: homebridge/homebridge:latest
+    restart: always
+    network_mode: host
+    volumes:
+      - ./homebridge:/homebridge
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '1'
+    healthcheck:
+      test: curl --fail localhost:8581 || exit 1
+      interval: 60s
+      retries: 5
+      start_period: 300s
+      timeout: 2s
+    environment:
       - TZ=Europe/London
 
 secrets:
