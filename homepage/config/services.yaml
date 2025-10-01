@@ -18,6 +18,10 @@
                 icon: overseerr.png
                 href: http://100.98.125.7:5055
                 description: Request management and media discovery
+                widget:
+                        type: overseerr
+                        url: http://100.98.125.7:5055
+                        key: MTcxNDY5MjI0OTgxMDVhNzhmMTIzLThiMGUtNGU3MC1hOTI3LTRjNjA1ODlhZTY0Mw==
 
         - Notifiarr:
                 icon: notifiarr.png
@@ -27,6 +31,11 @@
                 icon: calibre-web.png
                 href: http://100.98.125.7:8083
                 container: calibre-web
+                widget:
+                        type: calibreweb
+                        url: http://100.98.125.7:8083
+                        username: ushibre
+                        password: siwcus-wapdah-0fawjY
 
         - Calbre (Web UI):
                 icon: calibre.png
@@ -93,12 +102,14 @@
                         type: sabnzbd
                         url: http://100.98.125.7:8088
                         key: 95ea3be48b074e44b9d2f41981fe7483
-                        fields: 
         - Prowlarr:
                 icon: prowlarr.png
                 href: http://100.98.125.7:9696
                 description: Index handler
-
+                widget:
+                      type: prowlarr
+                      url: http://100.98.125.7:9696
+                      key: eb3f34baa0694331a8ebe7eb33db926b
 
 - Home Automation:
         - Homebridge:
@@ -107,3 +118,16 @@
                 widget:
                       type: homebridge
                       url: http://100.98.125.7:8581
+                      username: ushbridge
+                      password: postword
+
+- Administration:
+        - Portainer:
+                icon: portainer.png
+                href: https://100.98.125.7:9443
+                description: Docker management
+                widget:
+                      type: portainer
+                      url: https://100.98.125.7:9443
+                      env: 3
+                      key: ptr_i1maNpHuKkHZIytg/Ho2CLGn1LbqQCZ4KNPyaSmSZlY=
