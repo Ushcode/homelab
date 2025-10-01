@@ -108,7 +108,7 @@ services:
     restart: always
 
   readarr:
-    image: lscr.io/linuxserver/readarr:develop
+    image: ghcr.io/pennydreadful/bookshelf:hardcover
     container_name: readarr
     environment:
       - PUID=1000
@@ -363,6 +363,7 @@ services:
       - TZ=Europe/London
 
   homebridge:
+    container_name: homebridge
     image: homebridge/homebridge:latest
     restart: always
     network_mode: host
